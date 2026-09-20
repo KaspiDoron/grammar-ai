@@ -8,6 +8,7 @@ struct ProviderSettingsView: View {
     @State private var apiKeyDraft = ""
     @State private var keyError: String?
     @State private var test = TestState.idle
+    @State private var ollamaModels: [String] = []
 
     private enum TestState: Equatable {
         case idle
@@ -45,20 +46,24 @@ struct ProviderSettingsView: View {
                 }
             }
 
-            Section {
-                Picker(selection: $model.settings.model) {
-                    ForEach(ClaudeModel.allCases) { model in
-                        Text(model.displayName).tag(model)
-                    }
-                } label: {
-                    Text("Model")
-                    Text("Automatic picks the fastest model for this provider. A grammar fix does not need the biggest one.")
-                }
-            }
-
             switch model.settings.provider {
+            case .free: freeSection
+            case .ollama: ollamaSection
             case .claudeCode: claudeCodeSection
             case .anthropicAPI: apiKeySection
+            }
+
+            if model.settings.provider == .claudeCode || model.settings.provider == .anthropicAPI {
+                Section {
+                    Picker(selection: $model.settings.model) {
+                        ForEach(ClaudeModel.allCases) { model in
+                            Text(model.displayName).tag(model)
+                        }
+                    } label: {
+                        Text("Model")
+                        Text("Automatic picks the fastest model for this provider. A grammar fix does not need the biggest one.")
+                    }
+                }
             }
 
             Section {
@@ -69,7 +74,7 @@ struct ProviderSettingsView: View {
                 }
                 switch test {
                 case .idle:
-                    Caption("Sends the sample sentence \"\(Self.sample)\" to Claude.")
+                    Caption("Sends the sample sentence \"\(Self.sample)\" to the AI.")
                 case .running:
                     ProgressView().controlSize(.small)
                 case .passed(let text, let seconds):
@@ -81,7 +86,10 @@ struct ProviderSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { coordinator.refreshProviderStatus() }
+        .onAppear {
+            coordinator.refreshProviderStatus()
+            Task { ollamaModels = await coordinator.installedOllamaModels() }
+        }
     }
 
     // MARK: - Sections
@@ -99,6 +107,65 @@ struct ProviderSettingsView: View {
             }
         } else {
             Text("Unknown").foregroundStyle(.secondary)
+        }
+    }
+
+    @ViewBuilder private var freeSection: some View {
+        Section("How the free option works") {
+            step(1, "A model running locally in Ollama corrects your text. It is free, and your text never leaves this Mac.")
+            step(2, "If Ollama isn't running, the Claude Code app on this Mac takes over automatically, so a correction still happens.")
+            Caption("You don't have to choose - whichever is available is used. Set up either or both below.")
+        }
+        ollamaSection
+        Section("Backup: Claude Code") {
+            LabeledContent("Status") { providerLine(coordinator.claudeCodeReady) }
+            Caption("Install Claude Code and run `claude` once in Terminal to sign in. Optional - the local model alone is enough.")
+        }
+    }
+
+    @ViewBuilder private var ollamaSection: some View {
+        Section("Ollama (local model)") {
+            if ollamaModels.isEmpty {
+                Label("Ollama not detected", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                Caption("Install it from ollama.com, then run `ollama pull \(OllamaProvider.defaultModel)`. It runs entirely on your Mac.")
+                Link("Get Ollama", destination: URL(string: "https://ollama.com")!)
+            } else {
+                Picker(selection: $model.settings.ollamaModel) {
+                    ForEach(ollamaModels, id: \.self) { name in
+                        Text(name).tag(name)
+                    }
+                    if !ollamaModels.contains(model.settings.ollamaModel) {
+                        Text("\(model.settings.ollamaModel) (not installed)").tag(model.settings.ollamaModel)
+                    }
+                } label: {
+                    Text("Model")
+                    Text("A small model such as qwen3:1.7b is fast and accurate enough for grammar. Larger models are slower.")
+                }
+                Button("Refresh model list") {
+                    Task { ollamaModels = await coordinator.installedOllamaModels() }
+                }
+                .buttonStyle(.borderless)
+            }
+        }
+    }
+
+    private func step(_ number: Int, _ text: String) -> some View {
+        Label {
+            Text(text).fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Text("\(number)")
+                .font(.caption.bold())
+                .foregroundStyle(.white)
+                .frame(width: 18, height: 18)
+                .background(Color.accentColor, in: Circle())
+        }
+    }
+
+    @ViewBuilder private func providerLine(_ ready: Bool?) -> some View {
+        switch ready {
+        case .some(true): Label("Ready", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+        case .some(false): Label("Not set up", systemImage: "circle.dashed").foregroundStyle(.secondary)
+        case .none: ProgressView().controlSize(.small)
         }
     }
 

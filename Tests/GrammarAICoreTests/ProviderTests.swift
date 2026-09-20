@@ -241,6 +241,7 @@ struct ProviderFactoryTests {
     @Test func buildsTheProviderTheSettingsAskFor() {
         let factory = ProviderFactory(keyProvider: FakeKey(key: nil))
         var settings = AppSettings()
+        settings.provider = .claudeCode
         #expect(factory.makeProvider(for: settings) is ClaudeCodeProvider)
         settings.provider = .anthropicAPI
         #expect(factory.makeProvider(for: settings) is AnthropicAPIProvider)

@@ -1,7 +1,13 @@
 import Foundation
 
-/// Which Claude integration performs the correction.
+/// Which AI engine performs the correction.
 public enum ProviderKind: String, CaseIterable, Codable, Sendable, Identifiable {
+    /// Free, automatic, with a backup: a local Ollama model first, and if it
+    /// is not running, the Claude Code app. Nothing to pay, nothing to break
+    /// a correction if one engine is down. The default.
+    case free
+    /// A local model in Ollama only. Free and fully private.
+    case ollama
     /// The user's local Claude Code install (`claude -p`). No API key.
     case claudeCode
     /// Direct HTTPS calls to the Anthropic API with a key from the Keychain.
@@ -11,6 +17,8 @@ public enum ProviderKind: String, CaseIterable, Codable, Sendable, Identifiable 
 
     public var displayName: String {
         switch self {
+        case .free: return "Free (automatic)"
+        case .ollama: return "Ollama (local, free)"
         case .claudeCode: return "Claude Code"
         case .anthropicAPI: return "Anthropic API key"
         }
@@ -18,11 +26,20 @@ public enum ProviderKind: String, CaseIterable, Codable, Sendable, Identifiable 
 
     public var summary: String {
         switch self {
+        case .free:
+            return "Free and private: a local model first, and the Claude Code app as backup if it isn't running. Recommended."
+        case .ollama:
+            return "A model running locally in Ollama. Free, private, and your text never leaves this Mac."
         case .claudeCode:
             return "Uses the Claude Code app already signed in on this Mac. No API key needed."
         case .anthropicAPI:
             return "Calls the Anthropic API directly. Fastest, needs your own API key."
         }
+    }
+
+    /// Providers that cost nothing to run.
+    public var isFree: Bool {
+        self == .free || self == .ollama || self == .claudeCode
     }
 }
 
@@ -51,6 +68,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     // AI provider
     public var provider: ProviderKind
     public var model: ClaudeModel
+    /// The Ollama model used by the free/local providers.
+    public var ollamaModel: String
     /// Optional override for where `claude` lives. Empty means auto-detect.
     public var claudeExecutablePath: String
     /// Off by default: the CLI then ignores the user's Claude Code settings,
@@ -72,8 +91,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
         preserveTone: Bool = true,
         preserveSlang: Bool = true,
         preserveEmojis: Bool = true,
-        provider: ProviderKind = .claudeCode,
+        provider: ProviderKind = .free,
         model: ClaudeModel = .defaultModel,
+        ollamaModel: String = OllamaProvider.defaultModel,
         claudeExecutablePath: String = "",
         loadClaudeUserSettings: Bool = false,
         hasCompletedOnboarding: Bool = false
@@ -90,6 +110,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.preserveEmojis = preserveEmojis
         self.provider = provider
         self.model = model
+        self.ollamaModel = ollamaModel
         self.claudeExecutablePath = claudeExecutablePath
         self.loadClaudeUserSettings = loadClaudeUserSettings
         self.hasCompletedOnboarding = hasCompletedOnboarding
@@ -123,6 +144,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         preserveEmojis = value(.preserveEmojis, defaults.preserveEmojis)
         provider = value(.provider, defaults.provider)
         model = value(.model, defaults.model)
+        ollamaModel = value(.ollamaModel, defaults.ollamaModel)
         claudeExecutablePath = value(.claudeExecutablePath, defaults.claudeExecutablePath)
         loadClaudeUserSettings = value(.loadClaudeUserSettings, defaults.loadClaudeUserSettings)
         hasCompletedOnboarding = value(.hasCompletedOnboarding, defaults.hasCompletedOnboarding)
@@ -143,6 +165,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         try container.encode(preserveEmojis, forKey: .preserveEmojis)
         try container.encode(provider, forKey: .provider)
         try container.encode(model, forKey: .model)
+        try container.encode(ollamaModel, forKey: .ollamaModel)
         try container.encode(claudeExecutablePath, forKey: .claudeExecutablePath)
         try container.encode(loadClaudeUserSettings, forKey: .loadClaudeUserSettings)
         try container.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)
@@ -151,7 +174,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case isEnabled, hotkey, showNotifications, confirmBeforeReplacing
         case mode, language, customInstruction, preserveTone, preserveSlang, preserveEmojis
-        case provider, model, claudeExecutablePath, loadClaudeUserSettings
+        case provider, model, ollamaModel, claudeExecutablePath, loadClaudeUserSettings
         case hasCompletedOnboarding
     }
 

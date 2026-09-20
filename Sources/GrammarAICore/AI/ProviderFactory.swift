@@ -17,18 +17,45 @@ public struct ProviderFactory: Sendable {
     }
 
     public func makeProvider(for settings: AppSettings) -> AITextCorrectionProvider {
-        let model = settings.model.resolved(for: settings.provider)
         switch settings.provider {
+        case .free:
+            // A free, private chain: the local model first, the Claude Code
+            // app as backup so a correction still works if Ollama is not
+            // running. If neither is set up, the chain reports that clearly.
+            return FailoverProvider(links: [
+                Link(name: "Ollama", provider: makeOllama(settings)),
+                Link(name: "Claude Code", provider: makeClaudeCode(settings))
+            ])
+        case .ollama:
+            return makeOllama(settings)
         case .claudeCode:
-            let path = settings.claudeExecutablePath.trimmingCharacters(in: .whitespacesAndNewlines)
-            return ClaudeCodeProvider(
-                model: model,
-                executablePath: path.isEmpty ? nil : path,
-                loadUserSettings: settings.loadClaudeUserSettings,
+            return makeClaudeCode(settings)
+        case .anthropicAPI:
+            return AnthropicAPIProvider(
+                model: settings.model.resolved(for: .anthropicAPI),
+                keyProvider: keyProvider,
                 prompt: prompt
             )
-        case .anthropicAPI:
-            return AnthropicAPIProvider(model: model, keyProvider: keyProvider, prompt: prompt)
         }
     }
+
+    private func makeOllama(_ settings: AppSettings) -> OllamaProvider {
+        let model = settings.ollamaModel.trimmingCharacters(in: .whitespacesAndNewlines)
+        return OllamaProvider(
+            model: model.isEmpty ? OllamaProvider.defaultModel : model,
+            prompt: prompt
+        )
+    }
+
+    private func makeClaudeCode(_ settings: AppSettings) -> ClaudeCodeProvider {
+        let path = settings.claudeExecutablePath.trimmingCharacters(in: .whitespacesAndNewlines)
+        return ClaudeCodeProvider(
+            model: settings.model.resolved(for: .claudeCode),
+            executablePath: path.isEmpty ? nil : path,
+            loadUserSettings: settings.loadClaudeUserSettings,
+            prompt: prompt
+        )
+    }
+
+    private typealias Link = FailoverProvider.Link
 }

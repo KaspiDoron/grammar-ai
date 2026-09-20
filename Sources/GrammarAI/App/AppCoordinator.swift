@@ -23,6 +23,7 @@ final class AppCoordinator {
     private var pauseTimer: Timer?
     private var permissionPollers = Set<PermissionScreen>()
     private var providerCheckGeneration = 0
+    private var _claudeCodeReady: Bool?
 
     /// The screens that show live Accessibility status.
     enum PermissionScreen { case settings, onboarding }
@@ -242,6 +243,21 @@ final class AppCoordinator {
             model.providerStatus = status
             model.isCheckingProvider = false
         }
+    }
+
+    /// True if the Claude Code app is set up (for the free-chain status line),
+    /// nil while checking.
+    var claudeCodeReady: Bool? {
+        _claudeCodeReady
+    }
+
+    /// The models Ollama currently has installed, for the Settings picker.
+    func installedOllamaModels() async -> [String] {
+        let models = await OllamaProvider(model: model.settings.ollamaModel).installedModels()
+        // Opportunistically refresh the Claude Code readiness line too.
+        _claudeCodeReady = await ProviderFactory(keyProvider: KeychainAPIKeyProvider(keychain: keychain))
+            .makeProvider(for: AppSettings(provider: .claudeCode)).checkAvailability().isReady
+        return models
     }
 
     func saveAPIKey(_ key: String) -> Bool {

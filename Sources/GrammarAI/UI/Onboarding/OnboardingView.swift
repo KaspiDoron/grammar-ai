@@ -144,12 +144,12 @@ struct OnboardingView: View {
                 }
             }
         case .claude:
-            page("sparkles", "Connect Claude",
-                 "Grammar AI uses the Claude Code app already signed in on this Mac - no API key needed. Prefer your own Anthropic API key? Set it in Settings > AI Provider.") {
+            page("sparkles", "Free and private, out of the box",
+                 "Grammar AI corrects your text with a free model running on this Mac (via Ollama) and falls back to the Claude Code app if it isn't running. No API key, no subscription. Change it any time in Settings > AI Provider.") {
                 providerStatus
             }
         case .test:
-            page("checkmark.seal", "Try it", "This sends one sample sentence to Claude.") {
+            page("checkmark.seal", "Try it", "This sends one sample sentence to the AI.") {
                 Text(Self.sample)
                     .font(.system(.body, design: .monospaced))
                     .padding(10)

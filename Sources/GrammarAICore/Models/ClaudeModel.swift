@@ -30,8 +30,9 @@ public enum ClaudeModel: String, CaseIterable, Codable, Sendable, Identifiable {
     public func resolved(for provider: ProviderKind) -> ClaudeModel {
         guard self == .automatic else { return self }
         switch provider {
-        case .claudeCode: return .sonnet
+        case .claudeCode, .free: return .sonnet
         case .anthropicAPI: return .haiku
+        case .ollama: return .haiku // unused (Ollama has its own model id)
         }
     }
 

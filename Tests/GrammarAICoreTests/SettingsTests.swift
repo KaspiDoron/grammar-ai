@@ -11,7 +11,7 @@ struct SettingsTests {
         #expect(settings.hotkey == KeyCombo(keyCode: 5, modifiers: [.command, .shift]))
         #expect(settings.mode == .natural)
         #expect(settings.language == .automatic)
-        #expect(settings.provider == .claudeCode)
+        #expect(settings.provider == .free)
         #expect(!settings.confirmBeforeReplacing)
         #expect(!settings.hasCompletedOnboarding)
         #expect(!settings.loadClaudeUserSettings)

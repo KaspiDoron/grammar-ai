@@ -44,6 +44,9 @@ Grammar AI is a temporary working name. It is defined in one place
 - Private: no history, no keystroke logging, no screen recording, no
   analytics. See [PRIVACY.md](PRIVACY.md).
 - Native Swift, no third-party dependencies, idle CPU of zero.
+- Free by default: corrects with a local model (Ollama), falling back to
+  Claude Code automatically if it isn't running. No API key needed.
+- A Cursor / VS Code extension for inline fixing in the editor.
 
 ## Screenshots
 
@@ -131,6 +134,21 @@ A global shortcut takes the combination away from other apps while Grammar AI
 is enabled. Cmd+Shift+G is "Find Previous" in many apps and "Go to Folder" in
 Finder, so Settings tells you about that. Pick another combination if you use
 those, or use **Pause for 1 Hour** in the menu.
+
+## In Cursor and VS Code (best experience)
+
+For editors, there is a companion extension that fixes grammar **right in the
+editor** with native undo, instead of via copy and paste - and, optionally,
+underlines issues as you type with a one-click Quick Fix. It uses the same
+free local model.
+
+```bash
+cd editor-extension && npm install && npm run package
+cursor --install-extension grammar-ai.vsix   # or: code --install-extension ...
+```
+
+Then select text and press Cmd+Shift+G inside the editor. See
+[editor-extension/README.md](editor-extension/README.md).
 
 ## Right-click menu
 

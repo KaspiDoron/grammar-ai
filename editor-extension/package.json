@@ -1,0 +1,163 @@
+{
+  "name": "grammar-ai",
+  "displayName": "Grammar AI",
+  "description": "Fix grammar, spelling and punctuation inline as you type, using a free local AI model. Works in Cursor and VS Code.",
+  "version": "0.1.0",
+  "publisher": "kaspidoron",
+  "license": "MIT",
+  "author": "Doron Kaspi",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KaspiDoron/grammar-ai.git",
+    "directory": "editor-extension"
+  },
+  "engines": {
+    "vscode": "^1.92.0"
+  },
+  "categories": [
+    "Linters",
+    "Formatters",
+    "Other"
+  ],
+  "keywords": [
+    "grammar",
+    "spelling",
+    "proofreading",
+    "writing",
+    "ai",
+    "ollama",
+    "local"
+  ],
+  "icon": "images/icon.png",
+  "galleryBanner": {
+    "color": "#1466F5",
+    "theme": "dark"
+  },
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "grammarAI.fixSelection",
+        "title": "Grammar AI: Fix Grammar in Selection",
+        "category": "Grammar AI"
+      },
+      {
+        "command": "grammarAI.fixDocument",
+        "title": "Grammar AI: Fix Grammar in Whole Document",
+        "category": "Grammar AI"
+      },
+      {
+        "command": "grammarAI.toggleAsYouType",
+        "title": "Grammar AI: Toggle As-You-Type Suggestions",
+        "category": "Grammar AI"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "grammarAI.fixSelection",
+        "key": "cmd+shift+g",
+        "mac": "cmd+shift+g",
+        "win": "ctrl+shift+g",
+        "linux": "ctrl+shift+g",
+        "when": "editorTextFocus"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "grammarAI.fixSelection",
+          "group": "1_modification",
+          "when": "editorHasSelection"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Grammar AI",
+      "properties": {
+        "grammarAI.provider": {
+          "type": "string",
+          "enum": [
+            "free",
+            "ollama",
+            "claudeCode"
+          ],
+          "enumDescriptions": [
+            "Free and private: a local Ollama model first, then the Claude Code CLI as backup.",
+            "A local model in Ollama only. Free and fully private.",
+            "The Claude Code CLI (claude -p). Uses your Claude sign-in."
+          ],
+          "default": "free",
+          "description": "Which AI engine corrects your text. All options are free to run."
+        },
+        "grammarAI.ollama.model": {
+          "type": "string",
+          "default": "qwen3:1.7b",
+          "description": "The Ollama model to use. A small instruct model is fast and accurate enough for grammar."
+        },
+        "grammarAI.ollama.host": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Where Ollama is listening."
+        },
+        "grammarAI.claudeCode.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the claude executable. Leave empty to find it automatically."
+        },
+        "grammarAI.mode": {
+          "type": "string",
+          "enum": [
+            "basic",
+            "natural",
+            "professional"
+          ],
+          "default": "natural",
+          "description": "How aggressively to correct. Basic fixes only clear errors; Natural also smooths awkward phrasing; Professional makes it clearer and more formal."
+        },
+        "grammarAI.asYouType.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Underline grammar issues as you type and offer a quick fix. Off by default; it sends the paragraph you are editing to the AI after you pause."
+        },
+        "grammarAI.asYouType.delayMs": {
+          "type": "number",
+          "default": 1200,
+          "description": "How long to wait after you stop typing before checking the paragraph, in milliseconds."
+        },
+        "grammarAI.languageIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "markdown",
+            "plaintext",
+            "git-commit",
+            "latex",
+            "restructuredtext",
+            "asciidoc"
+          ],
+          "description": "Which document types as-you-type suggestions apply to. Add \"*\" for all."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "watch": "npm run build -- --watch",
+    "package": "npm run build -- --minify && vsce package --no-dependencies -o grammar-ai.vsix",
+    "test": "tsc && node --test test/"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.92.0",
+    "esbuild": "^0.23.0",
+    "typescript": "^5.5.0"
+  },
+  "allowScripts": {
+    "esbuild@0.23.1": true
+  }
+}

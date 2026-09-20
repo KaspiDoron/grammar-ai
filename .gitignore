@@ -1,0 +1,22 @@
+# Build output
+.build/
+build/
+*.xcodeproj
+xcuserdata/
+DerivedData/
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# Secrets - never commit credentials
+.env
+.env.*
+*.key
+*.pem
+*.p12
+secrets/
+credentials/
+
+# Per-machine code signing identity name (see scripts/bundle-app.sh)
+.signing-identity

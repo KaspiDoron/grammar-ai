@@ -10,7 +10,7 @@ the whole thing before a release.
 
 1. `scripts/bundle-app.sh --run`
 2. Grant Accessibility access (System Settings > Privacy & Security >
-   Accessibility > Grammar AI).
+   Accessibility > Typfix).
 3. Settings > AI Provider shows "Connected". Click **Test Correction**.
 4. Copy a recognisable sentinel to the clipboard first, for example
    `CLIPBOARD-SENTINEL`. After every test below, paste somewhere harmless and
@@ -78,10 +78,10 @@ Each must leave the document exactly as it was.
 - Nothing selected: click into a text field with no selection, press the
   shortcut. Expect "Select some text first." Repeat in VS Code.
 - Password field: select text in a password field (Safari login form, System
-  Settings). Expect "Grammar AI never reads password fields." or "Select some
+  Settings). Expect "Typfix never reads password fields." or "Select some
   text first." and no network request.
 - Accessibility denied: switch the permission off, press the shortcut. Expect
-  "Grammar AI needs Accessibility access." and a "Grant Accessibility
+  "Typfix needs Accessibility access." and a "Grant Accessibility
   Access..." item in the menu. Switch it back on; it must work again without
   relaunching.
 - Claude unavailable: turn Wi-Fi off, press the shortcut. Expect "Couldn't
@@ -133,8 +133,8 @@ Each must leave the document exactly as it was.
 ## Other entry points
 
 - Menu bar > Correct Selected Text does the same as the shortcut.
-- Right-click > Services > Correct with Grammar AI in TextEdit, Notes and
-  Mail replaces the selection and is undoable. Try it with Grammar AI not
+- Right-click > Services > Correct with Typfix in TextEdit, Notes and
+  Mail replaces the selection and is undoable. Try it with Typfix not
   running: macOS launches it.
 - Confirm before replacing (Settings > General): the panel shows both
   versions; Return replaces, Cmd+C copies, Esc cancels. The target app must
@@ -148,7 +148,7 @@ Each must leave the document exactly as it was.
   macOS uses (for example the Spotlight one) shows the system warning.
 - Enabled off, or Pause for 1 Hour: the icon dims and Cmd+Shift+G reaches the
   frontmost app again (Find Previous works in Safari).
-- Launch at login: switch it on, confirm Grammar AI appears in System
+- Launch at login: switch it on, confirm Typfix appears in System
   Settings > General > Login Items, log out and in, confirm it is running.
 - Quit and relaunch: every setting persisted; onboarding does not reappear.
 - Open the app a second time from Finder: no second menu bar icon; Settings

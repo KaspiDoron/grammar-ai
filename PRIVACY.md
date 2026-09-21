@@ -1,6 +1,6 @@
 # Privacy
 
-Grammar AI is built so that the honest answer to "what does it do with my
+Typfix is built so that the honest answer to "what does it do with my
 text?" is short. Every statement below describes how the code behaves, and
 the code is open for you to check.
 
@@ -8,7 +8,7 @@ the code is open for you to check.
 
 - Only the text you have selected.
 - Only at the moment you ask for a correction: the keyboard shortcut, the
-  menu bar item, or right-click > Services > Correct with Grammar AI.
+  menu bar item, or right-click > Services > Correct with Typfix.
 - Together with the correction instructions (the mode, language and options
   you chose in Settings, including your custom instruction if you wrote one).
 - Nothing is ever sent in the background. There is no automatic mode in this
@@ -23,7 +23,7 @@ the code is open for you to check.
 - In both cases Anthropic's terms and privacy policy for your account apply
   to that text, including their data retention and training settings. Grammar
   AI has no server of its own and the author never receives your text.
-- For its own calls, Grammar AI switches off Claude Code's telemetry, error
+- For its own calls, Typfix switches off Claude Code's telemetry, error
   reporting and update checks, so a correction makes exactly one request.
 
 ## What is stored
@@ -35,13 +35,13 @@ the code is open for you to check.
 - Preferences (mode, language, shortcut and so on) are stored in the standard
   macOS preferences for the app. They contain no text you corrected.
 - The optional Anthropic API key is stored only in your macOS login Keychain,
-  where only Grammar AI can read it without asking you. It never appears in
+  where only Typfix can read it without asking you. It never appears in
   the interface, in preferences or in logs. Like everything in your login
   Keychain, it is included in your own Time Machine backups.
 
 ## What is never done
 
-- No keystroke logging. Grammar AI does not observe what you type. It
+- No keystroke logging. Typfix does not observe what you type. It
   registers one global shortcut with macOS, and macOS notifies the app only
   when that exact combination is pressed.
 - No screen recording and no screenshots.
@@ -53,7 +53,7 @@ the code is open for you to check.
 ## Your clipboard
 
 Some apps (Chrome, Electron apps, Google Docs) do not expose their text to the
-macOS Accessibility API. There, and whenever a correction is pasted, Grammar AI
+macOS Accessibility API. There, and whenever a correction is pasted, Typfix
 uses the clipboard for a moment:
 
 - your current clipboard contents (all formats, including images and files)

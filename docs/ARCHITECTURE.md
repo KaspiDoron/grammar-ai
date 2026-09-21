@@ -1,6 +1,6 @@
 # Architecture
 
-Grammar AI is a menu-bar app that corrects the selected text in any macOS app.
+Typfix is a menu-bar app that corrects the selected text in any macOS app.
 This document explains how it is put together and why. The evidence behind
 the platform decisions is in [RESEARCH.md](RESEARCH.md).
 

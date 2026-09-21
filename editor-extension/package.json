@@ -1,6 +1,6 @@
 {
   "name": "grammar-ai",
-  "displayName": "Grammar AI",
+  "displayName": "Typfix",
   "description": "Fix grammar, spelling and punctuation inline as you type, using a free local AI model. Works in Cursor and VS Code.",
   "version": "0.1.0",
   "publisher": "kaspidoron",

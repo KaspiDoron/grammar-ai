@@ -121,7 +121,7 @@ Decision: Carbon `RegisterEventHotKey`. No third-party package.
   consume the key, needs Accessibility).
 - Honest trade-off: a global hotkey consumes the combination. The default
   Cmd+Shift+G is "Find Previous" in Safari and many editors and "Go to
-  Folder" in Finder and open/save dialogs. While Grammar AI is enabled those
+  Folder" in Finder and open/save dialogs. While Typfix is enabled those
   stop working, so the shortcut is changeable and Settings warns about it.
 
 ## 6. Right-click context menu

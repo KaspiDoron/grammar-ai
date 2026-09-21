@@ -17,7 +17,7 @@ The latest release and the `main` branch.
 
 ## Security model
 
-Grammar AI holds the Accessibility permission, which is powerful, so the design
+Typfix holds the Accessibility permission, which is powerful, so the design
 keeps what it does with it narrow.
 
 - No sandbox, by necessity: the App Sandbox forbids controlling other apps

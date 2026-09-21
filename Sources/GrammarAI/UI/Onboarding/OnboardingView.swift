@@ -116,7 +116,7 @@ struct OnboardingView: View {
         switch step {
         case .welcome:
             page("text.badge.checkmark", "Fix your writing anywhere on your Mac.",
-                 "Select text in any app, press a shortcut, and Claude corrects it in place - keeping your tone, your slang and your meaning.")
+                 "Select text in any app, press a shortcut, and a free AI model corrects it in place - keeping your tone, your slang and your meaning.")
         case .shortcut:
             page("keyboard", "Select text and press \(model.hotkeyDisplay).",
                  "That is the whole workflow. You can also right-click a selection and choose Services > Correct with Grammar AI.") {

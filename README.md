@@ -1,4 +1,4 @@
-# Grammar AI
+# Typfix
 
 Fix your writing anywhere on your Mac.
 
@@ -19,7 +19,7 @@ Hey John, I wanted to ask if you can send me the files tomorrow because I didn't
 and `hey bro can u send me that thing lol` stays casual:
 `Hey bro, can u send me that thing? lol`
 
-Grammar AI is a temporary working name. It is defined in one place
+Typfix is a temporary working name. It is defined in one place
 (`AppIdentity.swift` plus `Info.plist`) so it is easy to change.
 
 ## Features
@@ -27,7 +27,7 @@ Grammar AI is a temporary working name. It is defined in one place
 - Works system-wide: Safari, Chrome, Arc, Slack, Discord, Messages, Mail,
   Notes, VS Code, Cursor, Notion, Word, Google Docs and ordinary text fields.
 - One global shortcut (changeable), plus **right-click > Services > Correct
-  with Grammar AI**, plus the menu bar icon.
+  with Typfix**, plus the menu bar icon.
 - Fast: about 1.5 seconds per correction with the default setup.
 - Four modes: Basic Grammar, Natural, Professional, and Custom (your own
   instruction).
@@ -87,7 +87,7 @@ Accessibility access.
 macOS ties the Accessibility permission to the app's code signature. Without a
 stable signature the permission silently stops working every time you rebuild
 (the switch in System Settings still looks on). `scripts/setup-signing.sh`
-creates a free, local, self-signed identity called "Grammar AI Local Dev" so
+creates a free, local, self-signed identity called "Typfix Local Dev" so
 the permission survives rebuilds. It asks for your login password once. You
 can skip it; the app still works, you just re-grant access after each rebuild.
 
@@ -96,7 +96,7 @@ can skip it; the app still works, you just re-grant access after each rebuild.
 Open **Settings > AI Provider**.
 
 - **Claude Code (default).** Install Claude Code, run `claude` once in
-  Terminal and sign in. Grammar AI finds it automatically and shows
+  Terminal and sign in. Typfix finds it automatically and shows
   "Connected". Each correction runs a locked-down, single-shot
   `claude -p`: no tools, no MCP servers, no skills, no hooks, nothing saved to
   disk.
@@ -110,7 +110,7 @@ and the time it took.
 
 ## Accessibility permission
 
-Grammar AI needs Accessibility access so it can read the text you select and
+Typfix needs Accessibility access so it can read the text you select and
 replace it with the corrected version. That is the only permission it uses.
 
 System Settings > Privacy & Security > Accessibility > switch on **Grammar
@@ -118,7 +118,7 @@ AI**. Onboarding and Settings both have a button that opens that pane and
 update by themselves once access is granted.
 
 If the switch is on but the app says it has no access (usually after a rebuild
-with an ad-hoc signature), remove Grammar AI from the list with the minus
+with an ad-hoc signature), remove Typfix from the list with the minus
 button and add it again, or run:
 
 ```bash
@@ -130,7 +130,7 @@ tccutil reset Accessibility com.kaspidoron.grammarai
 The default is **Cmd+Shift+G**. Change it in Settings > General: click the
 shortcut, press the new combination. Esc cancels, Delete removes the shortcut.
 
-A global shortcut takes the combination away from other apps while Grammar AI
+A global shortcut takes the combination away from other apps while Typfix
 is enabled. Cmd+Shift+G is "Find Previous" in many apps and "Go to Folder" in
 Finder, so Settings tells you about that. Pick another combination if you use
 those, or use **Pause for 1 Hour** in the menu.
@@ -152,7 +152,7 @@ Then select text and press Cmd+Shift+G inside the editor. See
 
 ## Right-click menu
 
-Select text, right-click, **Services > Correct with Grammar AI**. macOS has no
+Select text, right-click, **Services > Correct with Typfix**. macOS has no
 API for adding items to other apps' context menus; Services is the native
 mechanism. It works in apps built on Apple's text system (Notes, Mail,
 TextEdit, Safari text fields, Messages, Xcode). Chrome and Electron apps do not
@@ -193,7 +193,7 @@ stored. Full details: [PRIVACY.md](PRIVACY.md).
 swift build                    # debug build
 scripts/test.sh                # 149 offline unit tests, about a second
 scripts/test.sh --live         # also 9 tests against your real Claude setup
-scripts/bundle-app.sh          # build/Grammar AI.app
+scripts/bundle-app.sh          # build/Typfix.app
 scripts/bundle-app.sh --run    # build, install, relaunch
 ```
 
@@ -239,5 +239,5 @@ Security reports: [SECURITY.md](SECURITY.md).
 
 ## License
 
-[MIT](LICENSE). Grammar AI is an independent project and is not affiliated
+[MIT](LICENSE). Typfix is an independent project and is not affiliated
 with or endorsed by Anthropic. Claude is a trademark of Anthropic.

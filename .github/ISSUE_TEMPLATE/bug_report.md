@@ -20,7 +20,7 @@ labels: bug
 **Environment**
 
 - macOS version:
-- Grammar AI version:
+- Typfix version:
 - Provider: Claude Code / Anthropic API key
 - Keyboard layout:
 

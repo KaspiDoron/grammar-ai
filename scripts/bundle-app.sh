@@ -10,7 +10,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APP_NAME="Grammar AI"
+APP_NAME="Typfix"
 EXECUTABLE="GrammarAI"
 BUNDLE_ID="com.kaspidoron.grammarai"
 # Signing identity, first match wins:
@@ -87,6 +87,8 @@ if [ "$MODE" = "--install" ] || [ "$MODE" = "--run" ]; then
 
     echo "==> Installing to $DEST"
     rm -rf "$DEST"
+    # Clean up the pre-rename bundle if it is still around.
+    rm -rf "$DEST_DIR/Grammar AI.app"
     cp -R "$APP" "$DEST"
 
     LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister"

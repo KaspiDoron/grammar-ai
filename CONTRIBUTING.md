@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping. Grammar AI is small on purpose; the bar for a change is
+Thanks for helping. Typfix is small on purpose; the bar for a change is
 that it makes the one workflow (select, shortcut, corrected) faster, safer or
 more reliable.
 

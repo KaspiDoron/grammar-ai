@@ -140,6 +140,24 @@ Each must leave the document exactly as it was.
   versions; Return replaces, Cmd+C copies, Esc cancels. The target app must
   keep its selection while the panel is open.
 
+## Suggest as I type (automatic mode)
+
+Turn on Settings > General > "Suggest as I type" (needs Ollama running and
+Accessibility granted).
+
+- In TextEdit or Notes, type a wrong sentence and end it with a period, e.g.
+  "i dont think this is workin properly." Pause. Within about a second a small
+  pill appears near the caret with the corrected sentence and "<shortcut> to
+  fix".
+- Press the shortcut (Cmd+Shift+G): the sentence is replaced in place.
+- Keep typing instead: the pill disappears without changing anything.
+- Move focus to another field or app: the pill disappears.
+- Confirm it never changes text on its own - it only ever suggests.
+- Confirm it does nothing in a password field.
+- Chrome/Electron apps may not expose the field to Accessibility; there the
+  pill will not appear (use the shortcut on a selection instead). This is an
+  expected limitation.
+
 ## Settings and lifecycle
 
 - Record a new shortcut; the old one stops working at once and the new one

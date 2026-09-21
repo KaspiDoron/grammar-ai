@@ -62,6 +62,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var hotkey: KeyCombo?
     public var showNotifications: Bool
     public var confirmBeforeReplacing: Bool
+    /// Opt-in "suggest as you type": watches the focused field via
+    /// Accessibility and offers a fix for a finished sentence. Uses the free
+    /// local model only. Off by default.
+    public var automaticSuggestions: Bool
 
     // Correction
     public var mode: CorrectionMode
@@ -95,6 +99,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         hotkey: KeyCombo? = .defaultCorrection,
         showNotifications: Bool = true,
         confirmBeforeReplacing: Bool = false,
+        automaticSuggestions: Bool = false,
         mode: CorrectionMode = .natural,
         language: CorrectionLanguage = .automatic,
         customInstruction: String = "",
@@ -114,6 +119,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.hotkey = hotkey
         self.showNotifications = showNotifications
         self.confirmBeforeReplacing = confirmBeforeReplacing
+        self.automaticSuggestions = automaticSuggestions
         self.mode = mode
         self.language = language
         self.customInstruction = customInstruction
@@ -150,6 +156,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         }
         showNotifications = value(.showNotifications, defaults.showNotifications)
         confirmBeforeReplacing = value(.confirmBeforeReplacing, defaults.confirmBeforeReplacing)
+        automaticSuggestions = value(.automaticSuggestions, defaults.automaticSuggestions)
         mode = value(.mode, defaults.mode)
         language = value(.language, defaults.language)
         customInstruction = value(.customInstruction, defaults.customInstruction)
@@ -173,6 +180,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         try container.encode(hotkey, forKey: .hotkey)
         try container.encode(showNotifications, forKey: .showNotifications)
         try container.encode(confirmBeforeReplacing, forKey: .confirmBeforeReplacing)
+        try container.encode(automaticSuggestions, forKey: .automaticSuggestions)
         try container.encode(mode, forKey: .mode)
         try container.encode(language, forKey: .language)
         try container.encode(customInstruction, forKey: .customInstruction)
@@ -190,7 +198,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case isEnabled, hotkey, showNotifications, confirmBeforeReplacing
+        case isEnabled, hotkey, showNotifications, confirmBeforeReplacing, automaticSuggestions
         case mode, language, customInstruction, preserveTone, preserveSlang, preserveEmojis
         case provider, model, ollamaModel, openAIModel, openAIBaseURL, claudeExecutablePath, loadClaudeUserSettings
         case hasCompletedOnboarding

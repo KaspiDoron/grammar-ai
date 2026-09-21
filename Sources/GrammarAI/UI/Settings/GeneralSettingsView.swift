@@ -59,11 +59,13 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                Toggle(isOn: .constant(false)) {
-                    Text("Automatic correction")
-                    Text("Not available yet. When it arrives it will be opt-in and will only ever suggest - never replace text on its own.")
+                Toggle(isOn: $model.settings.automaticSuggestions) {
+                    Text("Suggest as I type")
+                    Text("Watches the field you are typing in and, when you finish a sentence, shows a small fix near the cursor. Press the shortcut to accept, or keep typing to dismiss. It never changes your text on its own.")
                 }
-                .disabled(true)
+                Caption("Uses the free local model (Ollama) only - your text stays on this Mac - and needs Accessibility access. Works best in native text fields (Notes, Mail, TextEdit, Safari fields).")
+            } header: {
+                Text("Automatic")
             }
 
             Section("Accessibility access") {

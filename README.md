@@ -41,6 +41,8 @@ Typfix is a temporary working name. It is defined in one place
   clipboard instead.
 - Undo with Cmd+Z, like any paste.
 - Optional "confirm before replacing" review panel.
+- Optional "suggest as I type": a subtle fix appears near your cursor when you
+  finish a sentence; accept it with the shortcut. Uses the free local model.
 - Private: no history, no keystroke logging, no screen recording, no
   analytics. See [PRIVACY.md](PRIVACY.md).
 - Native Swift, no third-party dependencies, idle CPU of zero.

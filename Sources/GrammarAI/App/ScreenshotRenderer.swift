@@ -52,6 +52,8 @@ enum ScreenshotRenderer {
             await render(HUDView(content: content), named: name, into: directory, titled: false)
         }
 
+        await render(AutoSuggestPillPreview(), named: "pill", into: directory, titled: false)
+
         print("Wrote screenshots to \(directory.path)")
     }
 
@@ -85,4 +87,26 @@ final class InMemorySettingsStore: SettingsPersisting, @unchecked Sendable {
 
     func load() -> AppSettings { lock.withLock { settings } }
     func save(_ settings: AppSettings) { lock.withLock { self.settings = settings } }
+}
+
+
+/// A standalone copy of the as-you-type pill for the screenshot only.
+private struct AutoSuggestPillPreview: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+            Text("I don't think this is working properly.")
+                .font(.system(size: 13))
+            Text("\u{21E7}\u{2318}G to fix")
+                .font(.system(size: 12, weight: .semibold))
+                .padding(.horizontal, 8).padding(.vertical, 3)
+                .background(Color.accentColor, in: Capsule())
+                .foregroundStyle(.white)
+        }
+        .padding(.horizontal, 14).padding(.vertical, 9)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(.primary.opacity(0.08)))
+        .padding(10)
+        .fixedSize()
+    }
 }

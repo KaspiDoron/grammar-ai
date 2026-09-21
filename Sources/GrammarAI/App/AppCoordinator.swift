@@ -24,6 +24,7 @@ final class AppCoordinator {
     private var permissionPollers = Set<PermissionScreen>()
     private var providerCheckGeneration = 0
     private var _claudeCodeReady: Bool?
+    private var autoSuggestions: AutomaticSuggestionController!
 
     /// The screens that show live Accessibility status.
     enum PermissionScreen { case settings, onboarding }
@@ -59,6 +60,16 @@ final class AppCoordinator {
         hotkeys.onTrigger = { [weak self] in
             self?.correctSelection(trigger: .hotkey)
         }
+
+        // Automatic suggestions use the free LOCAL model only - never a paid
+        // cloud API on every sentence - for privacy and cost.
+        autoSuggestions = AutomaticSuggestionController(
+            makeProvider: { OllamaProvider(model: store.load().ollamaModel) },
+            context: { store.load().correctionContext }
+        )
+        autoSuggestions.hotkeyLabel = model.hotkeyDisplay
+        autoSuggestions.setEnabled(model.settings.automaticSuggestions && model.isActive)
+
         statusItem = StatusItemController(model: model, coordinator: self)
 
         let provider = ServicesProvider(coordinator: self)
@@ -80,6 +91,11 @@ final class AppCoordinator {
 
     func correctSelection(trigger: CorrectionTrigger) {
         guard model.isActive || trigger == .menu else { return }
+        // If an inline suggestion is showing, the shortcut applies it instead
+        // of starting a fresh correction.
+        if trigger == .hotkey, autoSuggestions.hasVisibleSuggestion, autoSuggestions.accept() {
+            return
+        }
         Log.info(.pipeline, "triggered", detail: trigger.rawValue)
         Task {
             if trigger == .menu {
@@ -178,6 +194,11 @@ final class AppCoordinator {
         if old.hotkey != new.hotkey || old.isEnabled != new.isEnabled {
             applyHotkey()
         }
+        autoSuggestions.hotkeyLabel = model.hotkeyDisplay
+        if old.automaticSuggestions != new.automaticSuggestions
+            || old.isEnabled != new.isEnabled {
+            autoSuggestions.setEnabled(new.automaticSuggestions && model.isActive)
+        }
         if old.provider != new.provider || old.model != new.model
             || old.claudeExecutablePath != new.claudeExecutablePath
             || old.ollamaModel != new.ollamaModel
@@ -228,6 +249,7 @@ final class AppCoordinator {
             pauseTimer = timer
         }
         applyHotkey()
+        autoSuggestions.setEnabled(model.settings.automaticSuggestions && model.isActive)
         statusItem.refresh()
     }
 
@@ -296,7 +318,7 @@ final class AppCoordinator {
     }
 
     func refreshKeyPresence() {
-        refreshKeyPresence()
+        model.hasAPIKey = keychain.read(account: KeychainAPIKeyProvider.account) != nil
         model.hasOpenAIKey = keychain.read(account: KeychainAPIKeyProvider.openAIAccount) != nil
     }
 

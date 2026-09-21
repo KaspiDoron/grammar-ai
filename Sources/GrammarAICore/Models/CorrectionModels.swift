@@ -123,25 +123,38 @@ public enum CorrectionError: Error, Equatable, Sendable {
         case .noSelection:
             return "Select some text first."
         case .accessibilityDenied:
-            return "Grammar AI needs Accessibility access."
+            return "\(AppIdentity.displayName) needs Accessibility access."
         case .secureField:
-            return "Grammar AI never reads password fields."
+            return "\(AppIdentity.displayName) never reads password fields."
         case .selectionTooLong(let limit):
             return "Selection is too long (limit \(limit) characters)."
         case .providerNotConfigured(let detail):
             return detail
         case .providerUnavailable:
-            return "Couldn't connect to Claude."
+            return "Couldn't reach the AI."
         case .timeout:
-            return "Claude took too long to respond."
+            return "The AI took too long to respond."
         case .invalidResponse:
-            return "Couldn't understand Claude's response."
+            return "Couldn't understand the AI's response."
         case .emptyResponse:
             return "No correction was returned."
         case .replacementFailed:
             return "Couldn't replace the selected text."
         case .cancelled:
             return "Cancelled."
+        }
+    }
+
+    /// True when this means "the provider is down" (worth failing over to
+    /// another provider, or skipping in a chunked run) rather than "this
+    /// request or reply was bad" (which would fail the same way everywhere).
+    public var isOutage: Bool {
+        switch self {
+        case .providerUnavailable, .timeout, .providerNotConfigured:
+            return true
+        case .noSelection, .accessibilityDenied, .secureField, .selectionTooLong,
+             .invalidResponse, .emptyResponse, .replacementFailed, .cancelled:
+            return false
         }
     }
 

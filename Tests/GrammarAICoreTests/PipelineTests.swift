@@ -96,13 +96,28 @@ struct PipelineTests {
         #expect(!log.events.contains("provider"))
     }
 
-    @Test func aVeryLargeSelectionIsRefusedLocally() async {
+    @Test func aLargeSelectionIsNowCorrectedInChunksNotRefused() async {
+        // What used to be refused at 10k is now chunked and corrected.
+        let log = EventLog()
+        let text = Array(repeating: "this are a sentence with a mistake.", count: 400).joined(separator: "\n\n")
+        let replacer = FakeReplacer(log: log)
+        let outcome = await makePipeline(
+            capturer: FakeCapturer(text: text, log: log),
+            replacer: replacer, log: log,
+            reply: { chunk in CorrectionResult(correctedText: chunk.replacingOccurrences(of: "this are", with: "this is"), changed: true) }
+        ).run()
+        #expect(outcome == .replaced)
+        #expect(replacer.replacedWith?.contains("this is a sentence") == true)
+        #expect(log.events.filter { $0 == "provider" }.count > 1) // it chunked
+    }
+
+    @Test func anEnormousSelectionIsStillRefusedAtTheSanityCeiling() async {
         let log = EventLog()
         let outcome = await makePipeline(
-            capturer: FakeCapturer(text: String(repeating: "a", count: 10_001), log: log),
+            capturer: FakeCapturer(text: String(repeating: "a", count: 200_001), log: log),
             replacer: FakeReplacer(log: log), log: log
         ).run()
-        #expect(outcome == .failed(.selectionTooLong(limit: 10_000)))
+        #expect(outcome == .failed(.selectionTooLong(limit: 200_000)))
         #expect(!log.events.contains("provider"))
     }
 
@@ -213,11 +228,80 @@ struct PipelineTests {
 
     @Test func errorMessagesAreTheSpecifiedOnesAndNeverLeakText() {
         #expect(CorrectionError.noSelection.userMessage == "Select some text first.")
-        #expect(CorrectionError.accessibilityDenied.userMessage == "Grammar AI needs Accessibility access.")
-        #expect(CorrectionError.providerUnavailable("secret detail").userMessage == "Couldn't connect to Claude.")
-        #expect(CorrectionError.timeout.userMessage == "Claude took too long to respond.")
-        #expect(CorrectionError.invalidResponse.userMessage == "Couldn't understand Claude's response.")
+        #expect(CorrectionError.accessibilityDenied.userMessage == "Typfix needs Accessibility access.")
+        #expect(CorrectionError.providerUnavailable("secret detail").userMessage == "Couldn't reach the AI.")
+        #expect(CorrectionError.timeout.userMessage == "The AI took too long to respond.")
+        #expect(CorrectionError.invalidResponse.userMessage == "Couldn't understand the AI's response.")
         #expect(CorrectionError.emptyResponse.userMessage == "No correction was returned.")
         #expect(CorrectionError.replacementFailed.userMessage == "Couldn't replace the selected text.")
+    }
+}
+
+@Suite("CorrectionPipeline - large text chunking")
+struct PipelineChunkingTests {
+
+    private static let bigConfig = PipelineConfiguration(chunkThreshold: 60, maxChunkChars: 50, chunkConcurrency: 3)
+
+    private func pipeline(log: EventLog, reply: @escaping @Sendable (String) async throws -> CorrectionResult) -> CorrectionPipeline {
+        CorrectionPipeline(
+            capturer: FakeCapturer(text: "unused", log: log),
+            replacer: FakeReplacer(log: log),
+            makeProvider: { FakeProvider(reply: reply, log: log) },
+            configuration: { PipelineChunkingTests.bigConfig }
+        )
+    }
+
+    @Test func correctsEveryChunkAndStitchesThemBack() async throws {
+        // Provider upper-cases the first letter of each chunk it sees.
+        let log = EventLog()
+        let text = "first paragraph here.\n\nsecond paragraph here.\n\nthird paragraph here.\n\nfourth paragraph here."
+        let result = try await pipeline(log: log) { chunk in
+            CorrectionResult(correctedText: chunk.prefix(1).uppercased() + chunk.dropFirst(), changed: true)
+        }.correct(text: text)
+        #expect(result.changed)
+        // Structure preserved, every paragraph capitalized.
+        #expect(result.correctedText == "First paragraph here.\n\nSecond paragraph here.\n\nThird paragraph here.\n\nFourth paragraph here.")
+        // It really did split (more than one provider call).
+        #expect(log.events.filter { $0 == "provider" }.count >= 4)
+    }
+
+    @Test func oneBadChunkKeepsItsOriginalWithoutFailingTheDocument() async throws {
+        let log = EventLog()
+        let text = "good one here.\n\nBADCHUNK triggers a bad reply.\n\ngood three here."
+        let result = try await pipeline(log: log) { chunk in
+            if chunk.contains("BADCHUNK") {
+                // An unrelated reply that the validator will reject.
+                return CorrectionResult(correctedText: "completely different unrelated sentence entirely", changed: true)
+            }
+            return CorrectionResult(correctedText: chunk.uppercased(), changed: true)
+        }.correct(text: text)
+        // The good chunks are corrected; the bad one keeps its original text.
+        #expect(result.correctedText.contains("GOOD ONE HERE."))
+        #expect(result.correctedText.contains("BADCHUNK triggers a bad reply."))
+        #expect(result.correctedText.contains("GOOD THREE HERE."))
+    }
+
+    @Test func aProviderOutageFailsTheWholeRun() async {
+        let log = EventLog()
+        let text = String(repeating: "a paragraph with words in it here.\n\n", count: 6)
+        let outcome = await CorrectionPipeline(
+            capturer: FakeCapturer(text: text, log: log),
+            replacer: FakeReplacer(log: log),
+            makeProvider: { FakeProvider(reply: { _ in throw CorrectionError.timeout }, log: log) },
+            configuration: { PipelineChunkingTests.bigConfig }
+        ).run()
+        #expect(outcome == .failed(.timeout))
+        #expect(!log.events.contains("replace"))
+    }
+
+    @Test func aVeryLargeSelectionIsStillRefusedAtTheSanityCeiling() async {
+        let log = EventLog()
+        let outcome = await CorrectionPipeline(
+            capturer: FakeCapturer(text: String(repeating: "x", count: 200_001), log: log),
+            replacer: FakeReplacer(log: log),
+            makeProvider: { FakeProvider(reply: { c in CorrectionResult(correctedText: c, changed: false) }, log: log) },
+            configuration: { PipelineConfiguration() }
+        ).run()
+        #expect(outcome == .failed(.selectionTooLong(limit: 200_000)))
     }
 }

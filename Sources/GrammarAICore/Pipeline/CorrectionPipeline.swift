@@ -6,18 +6,35 @@ public struct PipelineConfiguration: Sendable {
     public var isEnabled: Bool
     public var context: CorrectionContext
     public var confirmBeforeReplacing: Bool
+    /// A hard sanity ceiling. Selections up to here are corrected; larger
+    /// than this are refused, to avoid an accidental "select all" on a huge
+    /// file turning into thousands of model calls.
     public var maxSelectionLength: Int
+    /// Text longer than this is corrected in chunks instead of one call.
+    public var chunkThreshold: Int
+    /// The largest chunk sent to the model in one call.
+    public var maxChunkChars: Int
+    /// How many chunks may be in flight at once. Kept at 1 by default: a
+    /// local model serves one request at a time, and firing several at once
+    /// makes it return empty replies. Cloud providers can raise it.
+    public var chunkConcurrency: Int
 
     public init(
         isEnabled: Bool = true,
         context: CorrectionContext = CorrectionContext(),
         confirmBeforeReplacing: Bool = false,
-        maxSelectionLength: Int = 10_000
+        maxSelectionLength: Int = 200_000,
+        chunkThreshold: Int = 500,
+        maxChunkChars: Int = 450,
+        chunkConcurrency: Int = 1
     ) {
         self.isEnabled = isEnabled
         self.context = context
         self.confirmBeforeReplacing = confirmBeforeReplacing
         self.maxSelectionLength = maxSelectionLength
+        self.chunkThreshold = chunkThreshold
+        self.maxChunkChars = maxChunkChars
+        self.chunkConcurrency = chunkConcurrency
     }
 }
 
@@ -120,9 +137,79 @@ public actor CorrectionPipeline {
         guard text.count <= config.maxSelectionLength else {
             throw CorrectionError.selectionTooLong(limit: config.maxSelectionLength)
         }
-        let raw = try await provider.correct(text: text, context: config.context)
+        guard TextChunker.needsChunking(text, limit: config.chunkThreshold) else {
+            let raw = try await provider.correct(text: text, context: config.context)
+            try Task.checkCancellation()
+            return try ResponseValidator.validate(raw, against: text, mode: config.context.mode)
+        }
+        return try await correctInChunks(text: text, config: config, provider: provider)
+    }
+
+    /// Corrects a large text piece by piece and stitches it back together.
+    ///
+    /// Each chunk is corrected and validated on its own. A chunk whose
+    /// correction fails to validate (an outage aside) keeps its original text
+    /// rather than failing the whole document - one questionable paragraph
+    /// must not lose the other forty. A provider outage, or cancellation,
+    /// still fails the whole run, because retrying the rest would be pointless.
+    private static func correctInChunks(
+        text: String,
+        config: PipelineConfiguration,
+        provider: AITextCorrectionProvider
+    ) async throws -> CorrectionResult {
+        let chunks = TextChunker.chunks(from: text, maxChunkChars: config.maxChunkChars)
+        let separators = chunks.map(\.separator)
+        var corrected = Array(repeating: "", count: chunks.count)
+        var anyNeedsReview = false
+
+        // Correct chunks with bounded concurrency, preserving order. An
+        // outage thrown by any chunk cancels the group and fails the run.
+        try await withThrowingTaskGroup(of: (Int, String, Bool).self) { group in
+            var next = 0
+            var running = 0
+            let limit = max(1, config.chunkConcurrency)
+
+            func addTask(_ index: Int) {
+                let chunkText = chunks[index].text
+                group.addTask {
+                    try Task.checkCancellation()
+                    // A blank or symbol-only chunk (a code block, a rule) has
+                    // nothing to correct; keep it exactly.
+                    guard chunkText.contains(where: { $0.isLetter }) else {
+                        return (index, chunkText, false)
+                    }
+                    do {
+                        let raw = try await provider.correct(text: chunkText, context: config.context)
+                        let result = try ResponseValidator.validate(raw, against: chunkText, mode: config.context.mode)
+                        return (index, result.correctedText, result.needsReview)
+                    } catch let error as CorrectionError where !error.isOutage {
+                        // Bad reply for this chunk only: keep the original.
+                        return (index, chunkText, false)
+                    }
+                }
+            }
+
+            while next < chunks.count, running < limit {
+                addTask(next); next += 1; running += 1
+            }
+            while let (index, chunkCorrected, needsReview) = try await group.next() {
+                corrected[index] = chunkCorrected
+                anyNeedsReview = anyNeedsReview || needsReview
+                if next < chunks.count {
+                    addTask(next); next += 1
+                } else {
+                    running -= 1
+                }
+            }
+        }
         try Task.checkCancellation()
-        return try ResponseValidator.validate(raw, against: text, mode: config.context.mode)
+
+        let final = TextChunker.reassemble(correctedTexts: corrected, separators: separators)
+        return CorrectionResult(
+            correctedText: final,
+            changed: final != text,
+            needsReview: anyNeedsReview
+        )
     }
 
     private func perform(presetSelection: CapturedSelection?) async -> PipelineOutcome {

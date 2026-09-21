@@ -114,6 +114,9 @@ public struct OllamaProvider: AITextCorrectionProvider {
             "think": false,
             "options": ["temperature": 0],
             "format": "json",
+            // Keep the model resident so a multi-chunk large text does not
+            // reload it between chunks.
+            "keep_alive": "10m",
             "messages": [
                 ["role": "system", "content": systemPrompt],
                 ["role": "user", "content": userMessage]

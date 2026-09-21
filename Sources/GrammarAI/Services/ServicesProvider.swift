@@ -49,7 +49,7 @@ final class ServicesProvider: NSObject {
         // The service call is synchronous, but blocking the main thread
         // would deadlock the main-actor hops inside the pipeline. Spin the
         // run loop instead; the request itself times out after 30 s.
-        let deadline = Date().addingTimeInterval(40)
+        let deadline = Date().addingTimeInterval(180)
         while result == nil, Date() < deadline {
             RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.05))
         }

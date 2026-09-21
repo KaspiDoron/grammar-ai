@@ -104,20 +104,8 @@ public actor FailoverProvider: AITextCorrectionProvider {
 
     // MARK: - Health
 
-    /// An error that means "this provider is down" (skip it for a while)
-    /// rather than "this request was bad" (do not retry anywhere).
-    private func isOutage(_ error: CorrectionError) -> Bool {
-        switch error {
-        case .providerUnavailable, .timeout, .providerNotConfigured:
-            return true
-        case .noSelection, .accessibilityDenied, .secureField, .selectionTooLong,
-             .invalidResponse, .emptyResponse, .replacementFailed, .cancelled:
-            return false
-        }
-    }
-
     private func handle(_ error: CorrectionError, for name: String, firstOutage: inout CorrectionError?) throws {
-        if isOutage(error) {
+        if error.isOutage {
             bench(name)
             if firstOutage == nil { firstOutage = error }
             return // try the next provider

@@ -71,7 +71,9 @@ final class AppCoordinator {
         if !model.settings.hasCompletedOnboarding {
             showOnboarding()
         }
-        Log.info(.app, "started")
+        // Diagnostic (no user text): confirms whether the app has the
+        // Accessibility grant and whether the global shortcut registered.
+        Log.info(.app, "started", detail: "accessibility=\(AccessibilityPermission.isGranted) hotkey=\(hotkeys.registeredCombo != nil) enabled=\(model.settings.isEnabled)")
     }
 
     // MARK: - Correcting

@@ -68,17 +68,22 @@ public struct KeychainManager: Sendable {
     }
 }
 
-/// The Anthropic API key, read from the Keychain at request time.
+/// An API key read from the Keychain at request time, for a named account.
 public struct KeychainAPIKeyProvider: APIKeyProviding {
+    /// The Anthropic key's account (kept as a static for existing callers).
     public static let account = "anthropic-api-key"
+    /// The OpenAI-compatible key's account.
+    public static let openAIAccount = "openai-api-key"
 
     private let keychain: KeychainManager
+    private let account: String
 
-    public init(keychain: KeychainManager = KeychainManager()) {
+    public init(keychain: KeychainManager = KeychainManager(), account: String = KeychainAPIKeyProvider.account) {
         self.keychain = keychain
+        self.account = account
     }
 
     public func apiKey() -> String? {
-        keychain.read(account: Self.account)
+        keychain.read(account: account)
     }
 }

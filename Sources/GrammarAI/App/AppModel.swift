@@ -42,6 +42,7 @@ final class AppModel {
     var providerStatus: ProviderStatus?
     var isCheckingProvider = false
     var hasAPIKey = false
+    var hasOpenAIKey = false
 
     /// Why the global shortcut is not active, when it is not.
     var hotkeyProblem: String?

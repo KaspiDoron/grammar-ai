@@ -7,6 +7,8 @@ struct ProviderSettingsView: View {
 
     @State private var apiKeyDraft = ""
     @State private var keyError: String?
+    @State private var openAIKeyDraft = ""
+    @State private var openAIKeyError: String?
     @State private var test = TestState.idle
     @State private var ollamaModels: [String] = []
 
@@ -51,6 +53,7 @@ struct ProviderSettingsView: View {
             case .ollama: ollamaSection
             case .claudeCode: claudeCodeSection
             case .anthropicAPI: apiKeySection
+            case .openAI: openAISection
             }
 
             if model.settings.provider == .claudeCode || model.settings.provider == .anthropicAPI {
@@ -208,7 +211,65 @@ struct ProviderSettingsView: View {
         }
     }
 
+    @ViewBuilder private var openAISection: some View {
+        Section("Cloud API key") {
+            if model.hasOpenAIKey {
+                HStack {
+                    Label("Saved in your Keychain", systemImage: "key.fill")
+                    Spacer()
+                    Button("Remove", role: .destructive) { coordinator.removeAPIKey(kind: .openAI) }
+                }
+            } else {
+                HStack {
+                    SecureField("API key", text: $openAIKeyDraft, prompt: Text("sk-..."))
+                        .textContentType(.password)
+                        .onSubmit(saveOpenAIKey)
+                    Button("Save", action: saveOpenAIKey)
+                        .disabled(openAIKeyDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+                if let openAIKeyError {
+                    Label(openAIKeyError, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                }
+            }
+            Caption("Stored only in the macOS Keychain on this Mac. This is a paid, cloud provider - your text is sent to it.")
+        }
+        Section("Model and endpoint") {
+            TextField(text: $model.settings.openAIModel, prompt: Text(OpenAIProvider.defaultModel)) {
+                Text("Model")
+                Text("For OpenAI: gpt-4o-mini (fast) or gpt-4o. For others, use their model id.")
+            }
+            TextField(text: $model.settings.openAIBaseURL, prompt: Text("https://api.openai.com/v1")) {
+                Text("API base URL")
+                Text("Leave empty for OpenAI. Point it at Groq, OpenRouter, DeepSeek or any OpenAI-compatible endpoint to use those instead.")
+            }
+            ForEach(Self.presets, id: \.name) { preset in
+                Button("Use \(preset.name)") {
+                    model.settings.openAIBaseURL = preset.url
+                    model.settings.openAIModel = preset.model
+                }
+                .buttonStyle(.borderless)
+                .font(.callout)
+            }
+        }
+    }
+
+    private static let presets: [(name: String, url: String, model: String)] = [
+        ("OpenAI", "https://api.openai.com/v1", "gpt-4o-mini"),
+        ("Groq (fast, free tier)", "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile"),
+        ("OpenRouter", "https://openrouter.ai/api/v1", "google/gemini-2.0-flash-001"),
+        ("DeepSeek", "https://api.deepseek.com/v1", "deepseek-chat")
+    ]
+
     // MARK: - Actions
+
+    private func saveOpenAIKey() {
+        if coordinator.saveAPIKey(openAIKeyDraft, kind: .openAI) {
+            openAIKeyError = nil
+        } else {
+            openAIKeyError = "Couldn't save the key to the Keychain."
+        }
+        openAIKeyDraft = ""
+    }
 
     private func saveKey() {
         if coordinator.saveAPIKey(apiKeyDraft) {

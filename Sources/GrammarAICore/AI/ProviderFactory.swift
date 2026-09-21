@@ -6,13 +6,16 @@ import Foundation
 public struct ProviderFactory: Sendable {
 
     private let keyProvider: APIKeyProviding
+    private let openAIKeyProvider: APIKeyProviding
     private let prompt: CorrectionPrompt
 
     public init(
         keyProvider: APIKeyProviding = KeychainAPIKeyProvider(),
+        openAIKeyProvider: APIKeyProviding = KeychainAPIKeyProvider(account: KeychainAPIKeyProvider.openAIAccount),
         prompt: CorrectionPrompt = CorrectionPrompt()
     ) {
         self.keyProvider = keyProvider
+        self.openAIKeyProvider = openAIKeyProvider
         self.prompt = prompt
     }
 
@@ -36,7 +39,27 @@ public struct ProviderFactory: Sendable {
                 keyProvider: keyProvider,
                 prompt: prompt
             )
+        case .openAI:
+            let base = settings.openAIBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+            let model = settings.openAIModel.trimmingCharacters(in: .whitespacesAndNewlines)
+            return OpenAIProvider(
+                model: model.isEmpty ? OpenAIProvider.defaultModel : model,
+                baseURL: URL(string: base).map(Self.normalizedBase) ?? OpenAIProvider.openAIBaseURL,
+                keyProvider: openAIKeyProvider,
+                prompt: prompt
+            )
         }
+    }
+
+    /// Accept a base URL with or without a trailing `/v1`, and tolerate a
+    /// trailing slash, so users can paste whatever their provider shows.
+    private static func normalizedBase(_ url: URL) -> URL {
+        var string = url.absoluteString
+        while string.hasSuffix("/") { string.removeLast() }
+        if !string.hasSuffix("/v1"), !string.contains("/v1/"), !string.hasSuffix("/openai") {
+            string += "/v1"
+        }
+        return URL(string: string) ?? OpenAIProvider.openAIBaseURL
     }
 
     private func makeOllama(_ settings: AppSettings) -> OllamaProvider {

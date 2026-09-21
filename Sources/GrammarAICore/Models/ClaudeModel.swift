@@ -32,7 +32,8 @@ public enum ClaudeModel: String, CaseIterable, Codable, Sendable, Identifiable {
         switch provider {
         case .claudeCode, .free: return .sonnet
         case .anthropicAPI: return .haiku
-        case .ollama: return .haiku // unused (Ollama has its own model id)
+        // Ollama and OpenAI carry their own model ids, so the tier is unused.
+        case .ollama, .openAI: return .haiku
         }
     }
 

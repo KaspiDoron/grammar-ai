@@ -12,6 +12,9 @@ public enum ProviderKind: String, CaseIterable, Codable, Sendable, Identifiable 
     case claudeCode
     /// Direct HTTPS calls to the Anthropic API with a key from the Keychain.
     case anthropicAPI
+    /// Any OpenAI-compatible cloud API (OpenAI, Groq, OpenRouter, DeepSeek...)
+    /// with your own key and, optionally, a custom endpoint.
+    case openAI
 
     public var id: String { rawValue }
 
@@ -21,6 +24,7 @@ public enum ProviderKind: String, CaseIterable, Codable, Sendable, Identifiable 
         case .ollama: return "Ollama (local, free)"
         case .claudeCode: return "Claude Code"
         case .anthropicAPI: return "Anthropic API key"
+        case .openAI: return "OpenAI / other cloud API"
         }
     }
 
@@ -33,7 +37,9 @@ public enum ProviderKind: String, CaseIterable, Codable, Sendable, Identifiable 
         case .claudeCode:
             return "Uses the Claude Code app already signed in on this Mac. No API key needed."
         case .anthropicAPI:
-            return "Calls the Anthropic API directly. Fastest, needs your own API key."
+            return "Calls the Anthropic API directly with your own key. Fast, sends text to Anthropic."
+        case .openAI:
+            return "Any OpenAI-compatible API (OpenAI, Groq, OpenRouter, DeepSeek) with your own key."
         }
     }
 
@@ -70,6 +76,10 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var model: ClaudeModel
     /// The Ollama model used by the free/local providers.
     public var ollamaModel: String
+    /// Model id for the OpenAI-compatible provider.
+    public var openAIModel: String
+    /// Base URL for the OpenAI-compatible provider. Empty means OpenAI itself.
+    public var openAIBaseURL: String
     /// Optional override for where `claude` lives. Empty means auto-detect.
     public var claudeExecutablePath: String
     /// Off by default: the CLI then ignores the user's Claude Code settings,
@@ -94,6 +104,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         provider: ProviderKind = .free,
         model: ClaudeModel = .defaultModel,
         ollamaModel: String = OllamaProvider.defaultModel,
+        openAIModel: String = OpenAIProvider.defaultModel,
+        openAIBaseURL: String = "",
         claudeExecutablePath: String = "",
         loadClaudeUserSettings: Bool = false,
         hasCompletedOnboarding: Bool = false
@@ -111,6 +123,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         self.provider = provider
         self.model = model
         self.ollamaModel = ollamaModel
+        self.openAIModel = openAIModel
+        self.openAIBaseURL = openAIBaseURL
         self.claudeExecutablePath = claudeExecutablePath
         self.loadClaudeUserSettings = loadClaudeUserSettings
         self.hasCompletedOnboarding = hasCompletedOnboarding
@@ -145,6 +159,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         provider = value(.provider, defaults.provider)
         model = value(.model, defaults.model)
         ollamaModel = value(.ollamaModel, defaults.ollamaModel)
+        openAIModel = value(.openAIModel, defaults.openAIModel)
+        openAIBaseURL = value(.openAIBaseURL, defaults.openAIBaseURL)
         claudeExecutablePath = value(.claudeExecutablePath, defaults.claudeExecutablePath)
         loadClaudeUserSettings = value(.loadClaudeUserSettings, defaults.loadClaudeUserSettings)
         hasCompletedOnboarding = value(.hasCompletedOnboarding, defaults.hasCompletedOnboarding)
@@ -166,6 +182,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         try container.encode(provider, forKey: .provider)
         try container.encode(model, forKey: .model)
         try container.encode(ollamaModel, forKey: .ollamaModel)
+        try container.encode(openAIModel, forKey: .openAIModel)
+        try container.encode(openAIBaseURL, forKey: .openAIBaseURL)
         try container.encode(claudeExecutablePath, forKey: .claudeExecutablePath)
         try container.encode(loadClaudeUserSettings, forKey: .loadClaudeUserSettings)
         try container.encode(hasCompletedOnboarding, forKey: .hasCompletedOnboarding)
@@ -174,7 +192,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case isEnabled, hotkey, showNotifications, confirmBeforeReplacing
         case mode, language, customInstruction, preserveTone, preserveSlang, preserveEmojis
-        case provider, model, ollamaModel, claudeExecutablePath, loadClaudeUserSettings
+        case provider, model, ollamaModel, openAIModel, openAIBaseURL, claudeExecutablePath, loadClaudeUserSettings
         case hasCompletedOnboarding
     }
 

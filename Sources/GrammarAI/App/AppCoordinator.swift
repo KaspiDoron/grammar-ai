@@ -51,7 +51,7 @@ final class AppCoordinator {
             }
         )
 
-        model.hasAPIKey = keychain.read(account: KeychainAPIKeyProvider.account) != nil
+        refreshKeyPresence()
         model.onSettingsChanged = { [weak self] old, new in
             self?.settingsChanged(from: old, to: new)
         }
@@ -179,7 +179,9 @@ final class AppCoordinator {
             applyHotkey()
         }
         if old.provider != new.provider || old.model != new.model
-            || old.claudeExecutablePath != new.claudeExecutablePath {
+            || old.claudeExecutablePath != new.claudeExecutablePath
+            || old.ollamaModel != new.ollamaModel
+            || old.openAIModel != new.openAIModel || old.openAIBaseURL != new.openAIBaseURL {
             refreshProviderStatus()
         }
         statusItem.refresh()
@@ -262,12 +264,23 @@ final class AppCoordinator {
         return models
     }
 
-    func saveAPIKey(_ key: String) -> Bool {
+    /// Which stored key a save/remove targets.
+    enum APIKeyKind {
+        case anthropic, openAI
+        var account: String {
+            switch self {
+            case .anthropic: return KeychainAPIKeyProvider.account
+            case .openAI: return KeychainAPIKeyProvider.openAIAccount
+            }
+        }
+    }
+
+    func saveAPIKey(_ key: String, kind: APIKeyKind = .anthropic) -> Bool {
         let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return false }
         do {
-            try keychain.save(trimmed, account: KeychainAPIKeyProvider.account)
-            model.hasAPIKey = true
+            try keychain.save(trimmed, account: kind.account)
+            refreshKeyPresence()
             refreshProviderStatus()
             return true
         } catch {
@@ -276,10 +289,15 @@ final class AppCoordinator {
         }
     }
 
-    func removeAPIKey() {
-        try? keychain.delete(account: KeychainAPIKeyProvider.account)
-        model.hasAPIKey = false
+    func removeAPIKey(kind: APIKeyKind = .anthropic) {
+        try? keychain.delete(account: kind.account)
+        refreshKeyPresence()
         refreshProviderStatus()
+    }
+
+    func refreshKeyPresence() {
+        refreshKeyPresence()
+        model.hasOpenAIKey = keychain.read(account: KeychainAPIKeyProvider.openAIAccount) != nil
     }
 
     // MARK: - Launch at login

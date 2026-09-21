@@ -143,11 +143,11 @@ underlines issues as you type with a one-click Quick Fix. It uses the same
 free local model.
 
 ```bash
-cd editor-extension && npm install && npm run package
-cursor --install-extension grammar-ai.vsix   # or: code --install-extension ...
+scripts/install-editor-extension.sh   # builds + installs into Cursor and VS Code
 ```
 
-Then select text and press Cmd+Shift+G inside the editor. See
+Then reopen your editor, select text, and press Cmd+Shift+G. Can't find it?
+Open the Command Palette (Cmd+Shift+P) and type "Typfix". See
 [editor-extension/README.md](editor-extension/README.md).
 
 ## Right-click menu

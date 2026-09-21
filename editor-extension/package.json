@@ -2,7 +2,7 @@
   "name": "grammar-ai",
   "displayName": "Typfix",
   "description": "Fix grammar, spelling and punctuation inline as you type, using a free local AI model. Works in Cursor and VS Code.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "kaspidoron",
   "license": "MIT",
   "author": "Doron Kaspi",
@@ -143,7 +143,40 @@
           "description": "Which document types as-you-type suggestions apply to. Add \"*\" for all."
         }
       }
-    }
+    },
+    "walkthroughs": [
+      {
+        "id": "grammarAI.gettingStarted",
+        "title": "Get started with Typfix",
+        "description": "Fix grammar inline with a free local AI model.",
+        "steps": [
+          {
+            "id": "install-ollama",
+            "title": "Install a free local model (optional)",
+            "description": "Typfix works best with a free model on your Mac. Install [Ollama](https://ollama.com), then run `ollama pull qwen3:1.7b` in a terminal. No Ollama? Typfix falls back to Claude Code.",
+            "media": {
+              "markdown": "walkthrough/ollama.md"
+            }
+          },
+          {
+            "id": "fix-selection",
+            "title": "Fix your first sentence",
+            "description": "Select some text and press **Cmd+Shift+G** (Ctrl+Shift+G on Windows/Linux), or run **Typfix: Fix Grammar in Selection** from the Command Palette.\n[Run it now](command:grammarAI.fixSelection)",
+            "media": {
+              "markdown": "walkthrough/fix.md"
+            }
+          },
+          {
+            "id": "as-you-type",
+            "title": "Turn on as-you-type suggestions (optional)",
+            "description": "Get grammar issues underlined as you type, with a one-click Quick Fix.\n[Toggle as-you-type](command:grammarAI.toggleAsYouType)",
+            "media": {
+              "markdown": "walkthrough/asyoutype.md"
+            }
+          }
+        ]
+      }
+    ]
   },
   "scripts": {
     "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",

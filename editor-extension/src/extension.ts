@@ -39,6 +39,33 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   refreshStatusBar();
+  void showWelcomeIfFirstRun(context);
+}
+
+/// The first time the extension runs, tell the user in plain words how to use
+/// it - this is what makes it discoverable instead of a silent install.
+async function showWelcomeIfFirstRun(context: vscode.ExtensionContext): Promise<void> {
+  const key = "grammarAI.welcomed.v1";
+  if (context.globalState.get<boolean>(key)) return;
+  await context.globalState.update(key, true);
+  const shortcut = process.platform === "darwin" ? "Cmd+Shift+G" : "Ctrl+Shift+G";
+  const choice = await vscode.window.showInformationMessage(
+    `Typfix is ready. Select text and press ${shortcut} to fix its grammar - free, on your Mac.`,
+    "Try it now",
+    "Settings"
+  );
+  if (choice === "Try it now") {
+    // Open a scratch doc with a wrong sentence, select it, and correct it.
+    const doc = await vscode.workspace.openTextDocument({
+      language: "markdown",
+      content: "i dont think this is working properly, but lets see if typfix can fixed it",
+    });
+    const editor = await vscode.window.showTextDocument(doc);
+    editor.selection = new vscode.Selection(doc.positionAt(0), doc.positionAt(doc.getText().length));
+    await vscode.commands.executeCommand("grammarAI.fixSelection");
+  } else if (choice === "Settings") {
+    await vscode.commands.executeCommand("workbench.action.openSettings", "grammarAI");
+  }
 }
 
 export function deactivate(): void {

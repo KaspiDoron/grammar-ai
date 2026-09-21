@@ -1,13 +1,32 @@
-# Grammar AI for Cursor and VS Code
+# Typfix for Cursor and VS Code
 
 Fix grammar, spelling and punctuation right in your editor - with a free AI
-model running on your own machine. No API key, no subscription, no data
-leaving your Mac.
+model running on your own machine.
 
-This is the editor companion to the [Grammar AI menu-bar app](../README.md).
-The app corrects text in any macOS application; this extension gives the best
-possible experience inside Cursor and VS Code, where it can edit your text in
-place with native undo.
+## Quickstart (60 seconds)
+
+From the Typfix repo, one command installs it into Cursor and VS Code:
+
+```bash
+scripts/install-editor-extension.sh
+```
+
+Then:
+
+1. Fully quit and reopen your editor.
+2. Open any file and select some text.
+3. Press **Cmd+Shift+G** (Ctrl+Shift+G on Windows/Linux).
+
+Can't find it? Open the Command Palette (**Cmd+Shift+P**) and type **"Typfix"** -
+you'll see *Fix Grammar in Selection*, *Fix Grammar in Whole Document*, and
+*Toggle As-You-Type Suggestions*. There's also a **Typfix** item on the editor
+right-click menu, and a getting-started walkthrough on the editor's Welcome page.
+
+For the best free/private experience, install [Ollama](https://ollama.com) and
+run `ollama pull qwen3:1.7b`. No Ollama? Typfix uses the Claude Code app as a
+free backup.
+
+---
 
 ## What it does
 
